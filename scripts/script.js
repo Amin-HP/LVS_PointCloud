@@ -24,8 +24,17 @@ const controls = new OrbitControls( camera, renderer.domElement );
 // const controls = new FirstPersonControls( camera, renderer.domElement );
 // controls.movementSpeed = 150;
 // controls.lookSpeed = 0.1;
+const bar = document.querySelector(".progress-bar");
+let loadingVal1 = 0;
+let loadingVal2 = 0;
 
-
+var updateLoading = function() {
+    bar.style.width = (loadingVal1 + loadingVal2) + "%";
+    bar.innerText = (loadingVal1 + loadingVal2) + "%";
+    if((loadingVal1 + loadingVal2) > 99){
+        document.querySelector("#loading").style.display = "none";
+    }
+}
 
 window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth,window.innerHeight);
@@ -56,6 +65,8 @@ loader.load('assets/pointcloud3.obj',
 (xhr) => {
     // the request is in progress
     console.log((xhr.loaded / xhr.total) * 100);
+    loadingVal1 = (xhr.loaded / xhr.total) * 50;
+    updateLoading();
 },
 (err) => {
     // something went wrong
@@ -75,6 +86,8 @@ loader.load('assets/pointcloud33.obj',
 (xhr) => {
     // the request is in progress
     console.log((xhr.loaded / xhr.total) * 100);
+    loadingVal2 = (xhr.loaded / xhr.total) * 50;
+    updateLoading();
 },
 (err) => {
     // something went wrong
