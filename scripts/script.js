@@ -29,9 +29,9 @@ let loadingVal1 = 0;
 let loadingVal2 = 0;
 
 var updateLoading = function() {
-    bar.style.width = (loadingVal1 + loadingVal2) + "%";
-    bar.innerText = (loadingVal1 + loadingVal2) + "%";
-    if((loadingVal1 + loadingVal2) > 99){
+    bar.style.width = Math.floor(loadingVal1 + loadingVal2) + "%";
+    bar.innerText = Math.floor(loadingVal1 + loadingVal2) + "%";
+    if((loadingVal1 + loadingVal2) >= 100){
         document.querySelector("#loading").style.display = "none";
     }
 }
