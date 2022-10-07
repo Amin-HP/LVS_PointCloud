@@ -5,12 +5,12 @@ import { OBJLoader } from 'OBJLoader';
 import Stats from 'stats';
 
 var scene = new THREE.Scene();
-{
-    const color = 0x0a0a0a;  
-    const near = 15;
-    const far = 25;
-    scene.fog = new THREE.Fog(color, near, far);
-}
+// {
+//     const color = 0x0a0a0a;  
+//     const near = 15;
+//     const far = 25;
+//     scene.fog = new THREE.Fog(color, near, far);
+// }
 var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
 camera.position.z = 20;
 
@@ -53,10 +53,11 @@ var material = new THREE.MeshLambertMaterial({color: 0xF7F7F7});
 //scene.add(mesh);
 
 const loader = new OBJLoader();
-loader.load('assets/pointcloud3.obj',
+loader.load('assets/KalemegdanFortress.obj',
 (obj) => {
     // the request was successfull
-    let material = new THREE.PointsMaterial({ color: 0x0099FF, size: 0.04 })
+    const sprite = new THREE.TextureLoader().load( 'images/disc.png' );
+    let material = new THREE.PointsMaterial({ color: 0xFFFFFF, size: 0.01, sizeAttenuation: true, map: sprite, alphaTest: 0.1, transparent: true })
     const mesh = new THREE.Points(obj.children[0].geometry, material)
     // mesh.position.y = -15 //this model is not exactly in the middle by default so I moved it myself
     mesh.position.x = -3;
@@ -65,7 +66,7 @@ loader.load('assets/pointcloud3.obj',
 (xhr) => {
     // the request is in progress
     console.log((xhr.loaded / xhr.total) * 100);
-    loadingVal1 = (xhr.loaded / xhr.total) * 50;
+    loadingVal1 = (xhr.loaded / xhr.total) * 100;
     updateLoading();
 },
 (err) => {
@@ -73,26 +74,26 @@ loader.load('assets/pointcloud3.obj',
     console.error("loading pointcloud3.obj went wrong, ", err)
 })
 
-loader.load('assets/pointcloud33.obj',
-(obj) => {
-    // the request was successfull
-    let material = new THREE.PointsMaterial({ color: 0xeeff00, size: 0.03 })
-    const mesh = new THREE.Points(obj.children[0].geometry, material)
-    mesh.position.y = 0;
-    mesh.position.x = 8;
-    mesh.rotation.y = Math.PI / 2;
-    scene.add(mesh)
-},
-(xhr) => {
-    // the request is in progress
-    console.log((xhr.loaded / xhr.total) * 100);
-    loadingVal2 = (xhr.loaded / xhr.total) * 50;
-    updateLoading();
-},
-(err) => {
-    // something went wrong
-    console.error("loading pointcloud33.obj went wrong, ", err)
-})
+// loader.load('assets/pointcloud33.obj',
+// (obj) => {
+//     // the request was successfull
+//     let material = new THREE.PointsMaterial({ color: 0xeeff00, size: 0.03 })
+//     const mesh = new THREE.Points(obj.children[0].geometry, material)
+//     mesh.position.y = 0;
+//     mesh.position.x = 8;
+//     mesh.rotation.y = Math.PI / 2;
+//     scene.add(mesh)
+// },
+// (xhr) => {
+//     // the request is in progress
+//     console.log((xhr.loaded / xhr.total) * 100);
+//     loadingVal2 = (xhr.loaded / xhr.total) * 50;
+//     updateLoading();
+// },
+// (err) => {
+//     // something went wrong
+//     console.error("loading pointcloud33.obj went wrong, ", err)
+// })
 
 
 // let meshX = -10;
