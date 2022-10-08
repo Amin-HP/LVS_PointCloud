@@ -5,12 +5,14 @@ import { OBJLoader } from 'OBJLoader';
 import Stats from 'stats';
 
 var scene = new THREE.Scene();
-// {
-//     const color = 0x0a0a0a;  
-//     const near = 15;
-//     const far = 25;
+{
+    const color = 0x0a0a0a;  
+    const near = 15;
+    const far = 25;
+    const density = 0.02;
+    scene.fog = new THREE.FogExp2(color, density);
 //     scene.fog = new THREE.Fog(color, near, far);
-// }
+}
 var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
 camera.position.z = 20;
 
@@ -57,7 +59,7 @@ loader.load('assets/KalemegdanFortress.obj',
 (obj) => {
     // the request was successfull
     const sprite = new THREE.TextureLoader().load( 'images/disc.png' );
-    let material = new THREE.PointsMaterial({ color: 0xFFFFFF, size: 0.01, sizeAttenuation: true, map: sprite, alphaTest: 0.1, transparent: true })
+    let material = new THREE.PointsMaterial({ color: 0xFFFFFF, size: 0.05, sizeAttenuation: true, map: sprite, alphaTest: 0.5, transparent: true })
     const mesh = new THREE.Points(obj.children[0].geometry, material)
     // mesh.position.y = -15 //this model is not exactly in the middle by default so I moved it myself
     mesh.position.x = -3;
