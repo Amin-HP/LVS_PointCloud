@@ -55,7 +55,7 @@ var material = new THREE.MeshLambertMaterial({color: 0xF7F7F7});
 //scene.add(mesh);
 
 const loader = new OBJLoader();
-loader.load('assets/KalemegdanFortress.obj',
+loader.load('assets/stat3.obj',
 (obj) => {
     // the request was successfull
     const sprite = new THREE.TextureLoader().load( 'images/disc.png' );
