@@ -23,6 +23,11 @@ renderer.setClearColor("#23232b");
 renderer.setSize(window.innerWidth,window.innerHeight);
 document.body.appendChild(renderer.domElement);
 const controls = new OrbitControls( camera, renderer.domElement );
+controls.autoRotate = true;
+controls.enabled = true;
+controls.enableDamping = true;
+controls.enableZoom = false;
+
 const bar = document.querySelector(".progress-bar");
 let loadingVal = 0;
 let isLoaded = false;
@@ -55,7 +60,7 @@ const baseGeo = new THREE.BufferGeometry();
 const deformedGeo = new THREE.BufferGeometry();
 const targetGeo = new THREE.BufferGeometry();
 
-const mouseVec = new THREE.Vector3(0, 0, 0);
+const mouseVec = new THREE.Vector3(100, 100, 100);
 //scene.add(mesh);
 
 const deformGeo = (geometry, baseGeometry, amp, size) => {
@@ -99,50 +104,59 @@ const deformGeo = (geometry, baseGeometry, amp, size) => {
     geometry.attributes.position.needsUpdate = true;
 }
 
+const queryString = window.location.search;
+const urlParams = new URLSearchParams(queryString);
+const model_type = urlParams.get('model_type')
+console.log(model_type);
 
-const loader = new OBJLoader();
-loader.load('assets/edited2.obj',
-(obj) => {
-    // the request was successfull
-    const sprite = new THREE.TextureLoader().load( 'images/disc.png' );
-    let material = new THREE.PointsMaterial({ color: 0x01b6c7, size: 0.03, sizeAttenuation: true, map: sprite, alphaTest: 0.5, transparent: true })
-    var collideMat = new THREE.MeshBasicMaterial({color: 0x01b6c7, transparent: true, opacity: 0});
-    // geo = obj.children[0].geometry;
-    
-    // baseMesh.position.y = -10 //this model is not exactly in the middle by default so I moved it myself
-    // baseMesh.position.x = -3;
-    // baseMesh.scale.set(50,50,50);
+if(model_type != null){
+    const loader = new OBJLoader();
+    const file = 'assets/' + model_type + '.obj'
+    loader.load(file,
+    (obj) => {
+        // the request was successfull
+        // const sprite = new THREE.TextureLoader().load( 'images/disc.png' );
+        // let material = new THREE.PointsMaterial({ color: 0x01b6c7, size: 0.03, sizeAttenuation: true, map: sprite, alphaTest: 0.5, transparent: true })
+        const material = new THREE.PointsMaterial({ color: 0x01b6c7, size: 1, sizeAttenuation: false, opacity: 0.2})
+        var collideMat = new THREE.MeshBasicMaterial({color: 0x01b6c7, transparent: true, opacity: 0});
+        // geo = obj.children[0].geometry;
+        
+        // baseMesh.position.y = -10 //this model is not exactly in the middle by default so I moved it myself
+        // baseMesh.position.x = -3;
+        // baseMesh.scale.set(50,50,50);
 
-    baseGeo.copy(obj.children[0].geometry);
-    deformedGeo.copy(obj.children[0].geometry);
-    targetGeo.copy(obj.children[0].geometry);
-    // baseMesh = new THREE.Points(targetGeo, material);
+        baseGeo.copy(obj.children[0].geometry);
+        deformedGeo.copy(obj.children[0].geometry);
+        targetGeo.copy(obj.children[0].geometry);
+        // baseMesh = new THREE.Points(targetGeo, material);
+        
+        deformGeo(deformedGeo, baseGeo, 15, 0.2);
+        baseMesh = new THREE.Points(targetGeo, material);
+        // baseMesh.position.y = -10; 
+        console.log(baseMesh);
+        // meshColider = new THREE.Mesh(baseGeo, collideMat);
+        // console.log(mesh.geometry);
+        scene.add(baseMesh)
+        // scene.add(meshColider)
     
-    deformGeo(deformedGeo, baseGeo, 10, 0.2);
-    baseMesh = new THREE.Points(targetGeo, material);
-    // baseMesh.position.y = -10; 
-    console.log(baseMesh);
-    // meshColider = new THREE.Mesh(baseGeo, collideMat);
-    // console.log(mesh.geometry);
-    scene.add(baseMesh)
-    // scene.add(meshColider)
-   
-;
-    // verts.attributes.position.array.forEach(element => {
-    //     console.log(element);
-    // });
-    isLoaded = true;
-},
-(xhr) => {
-    // the request is in progress
-    console.log((xhr.loaded / xhr.total) * 100);
-    loadingVal = (xhr.loaded / xhr.total) * 100;
-    updateLoading();
-},
-(err) => {
-    // something went wrong
-    console.error("loading pointcloud3.obj went wrong, ", err)
-})
+    ;
+        // verts.attributes.position.array.forEach(element => {
+        //     console.log(element);
+        // });
+        isLoaded = true;
+    },
+    (xhr) => {
+        // the request is in progress
+        console.log((xhr.loaded / xhr.total) * 100);
+        loadingVal = (xhr.loaded / xhr.total) * 100;
+        updateLoading();
+    },
+    (err) => {
+        // something went wrong
+        console.error("loading pointcloud3.obj went wrong, ", err)
+    })
+}
+
 
 
 var light = new THREE.PointLight(0xFFFFFF, 1, 1000)
@@ -155,12 +169,13 @@ scene.add(light);
 
 const stats = Stats()
 document.body.appendChild(stats.dom)
-const geometrySphere = new THREE.SphereGeometry(0.1, 8, 8 );
-const mat = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
-const sphere = new THREE.Mesh( geometrySphere, mat );
+// const geometrySphere = new THREE.SphereGeometry(0.1, 8, 8 );
+// const mat = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
+// const sphere = new THREE.Mesh( geometrySphere, mat );
 // sphere.position.x =  5;
+//scene.add( sphere );
+
 // mouseVec.set(5,0,0);
-scene.add( sphere );
 
 
 const pointDeforminig = (targetGeo, baseGeo, deformedGeo, point , size = 1) => {
@@ -208,10 +223,12 @@ var render = function() {
     requestAnimationFrame(render);
     renderer.render(scene, camera);
     stats.update()
-    sphere.position.set(mouseVec.x,mouseVec.y,mouseVec.z);
+    controls.update();
+    // sphere.position.set(mouseVec.x,mouseVec.y,mouseVec.z);
+
     if(isLoaded){
-        // camera.rotation.y += 0.003;
-        pointDeforminig(targetGeo, baseGeo, deformedGeo, mouseVec, 10);
+        // baseMesh.rotation.y += 0.005;
+        pointDeforminig(targetGeo, baseGeo, deformedGeo, mouseVec, 7);
        
         // baseMesh.geometry.attributes.position.needsUpdate = true;
         // console.log(value);
