@@ -40,6 +40,7 @@ var updateLoading = function() {
 }
 
 window.addEventListener('mousemove', onMouseMove);
+window.addEventListener('click', onMouseClick);
 window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth,window.innerHeight);
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -60,7 +61,12 @@ const baseGeo = new THREE.BufferGeometry();
 const deformedGeo = new THREE.BufferGeometry();
 const targetGeo = new THREE.BufferGeometry();
 
+const targetMouseVec = new THREE.Vector3(100, 100, 100);
 const mouseVec = new THREE.Vector3(100, 100, 100);
+let mouseRate = 0;
+
+let isExplode = false, exploding = false;
+let explodeRate = 0;
 //scene.add(mesh);
 
 const deformGeo = (geometry, baseGeometry, amp, size) => {
@@ -176,16 +182,37 @@ document.body.appendChild(stats.dom)
 //scene.add( sphere );
 
 // mouseVec.set(5,0,0);
-
-
-const pointDeforminig = (targetGeo, baseGeo, deformedGeo, point , size = 1) => {
+const updateMouse = () => {
+    if(!mouseVec.equals(targetMouseVec) ){
+        mouseRate = Math.min(mouseRate + 0.05, 1);
+        mouseVec.x = targetMouseVec.x * mouseRate +  mouseVec.x * (1 - mouseRate);
+        mouseVec.y = targetMouseVec.y * mouseRate +  mouseVec.y * (1 - mouseRate);
+        mouseVec.z = targetMouseVec.z * mouseRate +  mouseVec.z * (1 - mouseRate);
+    }
+}
+const updatExplode = () => {
+    if(isExplode){
+        if(exploding == false) 
+            explodeRate = Math.max(explodeRate - 0.05, 0);
+        else
+            explodeRate = Math.min(explodeRate + 0.05, 1);
+        // console.log(explodeRate);
+        if(explodeRate == 1){
+            exploding = false;
+        }
+        if(explodeRate == 0){
+            isExplode = false;
+        }
+    }
+}
+const pointDeforminig = (targetGeo, baseGeo, deformedGeo, point , size = 1, amp = 1.2) => {
     const targetVerts = targetGeo.attributes.position;
     const baseVerts = baseGeo.attributes.position;
     const deformedVerts = deformedGeo.attributes.position;
 
     let x0, y0, z0, index ,ix ,iy, iz, value, x1, y1, z1;
     index = 0;
-
+    const t = (Date.now() * 0.0008) ;
     for(let i = 0; i < targetVerts.count; i++){
         ix = index ++;
         iy = index ++;
@@ -196,23 +223,56 @@ const pointDeforminig = (targetGeo, baseGeo, deformedGeo, point , size = 1) => {
         x0 = baseVerts.array[ix];
         y0 = baseVerts.array[iy];
         z0 = baseVerts.array[iz];
-
+        const n = noise.perlin3((x0 + t) / amp, (y0 + t) / amp, (z0 + t) / amp) * 0.5;
         if(dist < size){
             x1 = deformedVerts.array[ix];
             y1 = deformedVerts.array[iy];
             z1 = deformedVerts.array[iz];
-            // value = noise.perlin3(x0 * size, y0 * size, z0 * size) * amp;
+            
             value = (size - dist) / size;
             
-            targetVerts.array[ix] = x0 * (1 - value) + value * x1;
-            targetVerts.array[iy] = y0 * (1 - value) + value * y1;
-            targetVerts.array[iz] = z0 * (1 - value) + value * z1;
+            targetVerts.array[ix] = x0 * (1 - value) + value * (x1 + n);
+            targetVerts.array[iy] = y0 * (1 - value) + value * (y1 + n);
+            targetVerts.array[iz] = z0 * (1 - value) + value * (z1 + n);
         }
         else{
-            targetVerts.array[ix] = x0;
-            targetVerts.array[iy] = y0;
-            targetVerts.array[iz] = z0;
+            targetVerts.array[ix] = x0 ;
+            targetVerts.array[iy] = y0 ;
+            targetVerts.array[iz] = z0 ;
         }
+       
+    }
+    targetGeo.attributes.position.needsUpdate = true;
+    
+}
+
+const explode = (targetGeo, baseGeo, amp = 10) => {
+    const targetVerts = targetGeo.attributes.position;
+    const baseVerts = baseGeo.attributes.position;
+    const baseNorms = baseGeo.attributes.normal;
+
+    let x0 , y0 , z0 , index ,ix ,iy, iz, value, nx, ny, nz;
+    index = 0;
+    const t = (Date.now() * 0.0008) ;
+    for(let i = 0; i < targetVerts.count; i++){
+        ix = index ++;
+        iy = index ++;
+        iz = index ++;
+        const p = new THREE.Vector3(targetVerts.array[ix], targetVerts.array[iy], targetVerts.array[iz]);
+        x0 = baseVerts.array[ix];
+        y0 = baseVerts.array[iy];
+        z0 = baseVerts.array[iz];
+        
+        nx = baseNorms.array[ix];
+        ny = baseNorms.array[iy];
+        nz = baseNorms.array[iz];
+
+        const n = noise.perlin3((x0 + t) / amp, (y0 + t) / amp, (z0 + t) / amp) * 5;
+
+        targetVerts.array[ix] = x0 * (1 - explodeRate) + (x0 + n * nx) * explodeRate;
+        targetVerts.array[iy] = y0 * (1 - explodeRate) + (y0 + n * nx) * explodeRate;
+        targetVerts.array[iz] = z0 * (1 - explodeRate) + (z0 + n * nx) * explodeRate;
+        
        
     }
     targetGeo.attributes.position.needsUpdate = true;
@@ -224,11 +284,18 @@ var render = function() {
     renderer.render(scene, camera);
     stats.update()
     controls.update();
+    updateMouse();
+    updatExplode();
     // sphere.position.set(mouseVec.x,mouseVec.y,mouseVec.z);
 
     if(isLoaded){
         // baseMesh.rotation.y += 0.005;
-        pointDeforminig(targetGeo, baseGeo, deformedGeo, mouseVec, 7);
+        if(!isExplode){
+            pointDeforminig(targetGeo, baseGeo, deformedGeo, mouseVec, 7);
+        }
+        else{
+            explode(targetGeo, baseGeo, 7);
+        }
        
         // baseMesh.geometry.attributes.position.needsUpdate = true;
         // console.log(value);
@@ -238,22 +305,26 @@ var render = function() {
 
     
 }
-
+function onMouseClick(event) {
+    console.log("click");
+    isExplode = true;
+    exploding = true;
+}
 function onMouseMove(event) {
     event.preventDefault();
-
+    mouseRate = 0;
     mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
     mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-    // mouseVec.set(mouse.x, mouse.y, 0.5);
-    // mouseVec.unproject( camera );
-    // mouseVec.sub( camera.position ).normalize();
+    // targetMouseVec.set(mouse.x, mouse.y, 0.5);
+    // targetMouseVec.unproject( camera );
+    // targetMouseVec.sub( camera.position ).normalize();
 
     planeNormal.copy(camera.position).normalize();
     plane.setFromNormalAndCoplanarPoint(planeNormal, scene.position);
     raycaster.setFromCamera(mouse, camera);
-    raycaster.ray.intersectPlane(plane, mouseVec);
+    raycaster.ray.intersectPlane(plane, targetMouseVec);
 
-    // console.log(mouseVec);
+    // console.log(targetMouseVec);
 
     // raycaster.setFromCamera(mouse, camera);
     // var intersects = raycaster.intersectObjects(scene.children, true);
@@ -261,17 +332,17 @@ function onMouseMove(event) {
     // if(intersects.length > 0)
     //     for (var i = 0; i < intersects.length; i++) {
     //         if(intersects[i].object == meshColider){
-    //             mouseVec.set(intersects[i].point.x,intersects[i].point.y,intersects[i].point.z);
+    //             targetMouseVec.set(intersects[i].point.x,intersects[i].point.y,intersects[i].point.z);
     //             break;
     //         }
            
     //     }
     // else{
-    //     // mouseVec.set(100,100,100);
+    //     // targetMouseVec.set(100,100,100);
     //     planeNormal.copy(camera.position).normalize();
     //     plane.setFromNormalAndCoplanarPoint(planeNormal, scene.position);
     //     // raycaster.setFromCamera(mouse, camera);
-    //     raycaster.ray.intersectPlane(plane, mouseVec);
+    //     raycaster.ray.intersectPlane(plane, targetMouseVec);
     // }
 }
 
