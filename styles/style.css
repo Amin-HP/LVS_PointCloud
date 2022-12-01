@@ -19,3 +19,18 @@ canvas {
     z-index: 10001;
     background-color: rgba(0, 0, 0, 0.7);
 }
+#cursor{
+    background-color: transparent;
+    border: 1px solid #FFF;
+
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    pointer-events: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: translate(-50%, -50%);
+    z-index: 10002;
+    /* mix-blend-mode: difference; */
+}
