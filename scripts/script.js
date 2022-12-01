@@ -33,7 +33,7 @@ const mouse = {
 const particle = {
     size: 1,
     color: "#01b6c7",
-    opacity: 0.5,
+    opacity: 1,
 }
 
 const gui = new dat.GUI();
@@ -291,8 +291,8 @@ const updateMouse = () => {
 
     cursor.style.left = mouse.cursorX + "px";
     cursor.style.top = mouse.cursorY + "px";
-    cursor.style.width = distSpeed / 10 + mouse.size + "px";
-    cursor.style.height = distSpeed / 10 + mouse.size + "px";
+    cursor.style.width = distSpeed / 8 + mouse.size + "px";
+    cursor.style.height = distSpeed / 8 + mouse.size + "px";
     // console.log(distSpeed);
     
 }
