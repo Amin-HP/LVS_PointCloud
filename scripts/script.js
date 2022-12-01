@@ -20,10 +20,10 @@ const noiseAnim = {
     speed : 0.002
 }
 const mouse = {
-    x : 0,
-    y : 0,
-    cursorX : 0,
-    cursorY : 0,
+    x : window.innerWidth / 2,
+    y : window.innerHeight / 2,
+    cursorX : window.innerWidth / 2,
+    cursorY : window.innerHeight / 2,
     speed : 0.1,
     size: 30,
     isVisible: false
